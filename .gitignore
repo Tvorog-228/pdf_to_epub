@@ -30,3 +30,8 @@ htmlcov/
 .DS_Store
 Thumbs.db
 lost+found/
+
+
+# Documentos y resultados de conversión
+*.pdf
+*.epub

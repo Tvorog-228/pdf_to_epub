@@ -132,12 +132,25 @@ class AppHibrida(ctk.CTk):
                     b_f = min(i + batch - 1, fin)
                     self.log(f"📦 Procesando {i}-{b_f}...")
 
+                    # Extracción PDF
+                    t_start_conv = time.perf_counter()
                     res = engine.converter.convert(source=self.archivo_path, page_range=[i, b_f])
                     raw = res.document.export_to_markdown()
+                    self.log(f"  ⏱️ Extracción: {time.perf_counter() - t_start_conv:.2f}s")
+
                     lista_raw.append(raw)
 
+                    # Editor Groq
+                    self.log("  🤖 [Groq] Llama-3.3 Editor en marcha...")
+                    t_start_groq = time.perf_counter()
                     editado = engine.llamar_editor_groq(raw, ctx_anterior)
+                    self.log(f"  ✅ Groq completado en {time.perf_counter() - t_start_groq:.2f}s")
+
+                    # Auditor Cerebras
+                    self.log("  🧠 [Cerebras] Auditor Llama-3.1 en marcha...")
+                    t_start_cerebras = time.perf_counter()
                     final = engine.llamar_auditor_cerebras(raw, editado)
+                    self.log(f"  ✨ Cerebras completado en {time.perf_counter() - t_start_cerebras:.2f}s")
 
                     lista_clean.append(final)
                     ctx_anterior = final
@@ -152,8 +165,19 @@ class AppHibrida(ctk.CTk):
                 for idx, chunk in enumerate(chunks):
                     self.log(f"📦 Bloque {idx+1}/{len(chunks)}")
                     lista_raw.append(chunk)
+
+                    # Editor Groq
+                    self.log("  🤖 [Groq] Llama-3.3 Editor en marcha...")
+                    t_start_groq = time.perf_counter()
                     editado = engine.llamar_editor_groq(chunk, ctx_anterior)
+                    self.log(f"  ✅ Groq completado en {time.perf_counter() - t_start_groq:.2f}s")
+
+                    # Auditor Cerebras
+                    self.log("  🧠 [Cerebras] Auditor Llama-3.1 en marcha...")
+                    t_start_cerebras = time.perf_counter()
                     final = engine.llamar_auditor_cerebras(chunk, editado)
+                    self.log(f"  ✨ Cerebras completado en {time.perf_counter() - t_start_cerebras:.2f}s")
+
                     lista_clean.append(final)
                     ctx_anterior = final
                     self.progress.set((idx + 1) / len(chunks))
@@ -181,6 +205,5 @@ class AppHibrida(ctk.CTk):
 
         except Exception as e: self.log(f"❌ Error: {e}")
         finally: self.btn_run.configure(state="normal")
-
 if __name__ == "__main__":
     app = AppHibrida(); app.mainloop()
