@@ -1,0 +1,32 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
+env/
+venv/
+.venv/
+pip-log.txt
+pip-delete-this-directory.txt
+.history
+
+# --- Secretos y Configuración ---
+.env
+.venv
+instance/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# --- Editores e IDEs ---
+.vscode/
+.idea/
+# Archivos temporales de Vim/Neovim
+*.swp
+*.swo
+*~
+
+# --- Sistema (Ubuntu/Linux/Mac) ---
+.DS_Store
+Thumbs.db
+lost+found/
