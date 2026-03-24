@@ -48,9 +48,17 @@ class AppHibrida(ctk.CTk):
         f_agentes = ctk.CTkFrame(self, fg_color="transparent")
         f_agentes.pack(fill="x", padx=25, pady=10)
         ctk.CTkLabel(f_agentes, text="AI Configuration:", font=("Arial", 12, "bold")).pack(side="left", padx=10)
-        self.seg_button = ctk.CTkSegmentedButton(f_agentes,
-                                                values=["Solo Groq (Fast)", "Hybrid (Groq + Cerebras)", "No AI (Direct PDF to MD)"],
-                                                variable=self.modo_agente, width=550)
+        self.seg_button = ctk.CTkSegmentedButton(
+            f_agentes,
+            values=[
+                "Solo Groq (Fast)",
+                "Hybrid (Groq + Cerebras)",
+                "Solo Ollama (Local)", # <-- Nueva opción
+                "No AI (Direct PDF to MD)"
+            ],
+            variable=self.modo_agente,
+            width=700 # Aumentamos un poco el ancho
+        )
         self.seg_button.pack(side="left", padx=10)
 
         # --- SECCIÓN ARCHIVOS ---
@@ -132,6 +140,7 @@ class AppHibrida(ctk.CTk):
             modo_actual = self.modo_agente.get()
             is_no_ai = (modo_actual == "No AI (Direct PDF to MD)")
             modo_hibrido = (modo_actual == "Hybrid (Groq + Cerebras)")
+            is_ollama = (modo_actual == "Solo Ollama (Local)")
 
             ctx_anterior = ""
             batch = int(self.entry_batch.get())
@@ -182,6 +191,9 @@ class AppHibrida(ctk.CTk):
                     if is_no_ai:
                         # Si es "No AI", el resultado final es simplemente la extracción
                         final = raw
+                    elif is_ollama:
+                        self.log("  🦙 Ollama Local (Llama 3.2 1b)...")
+                        final = engine.llamar_ollama(raw, ctx_anterior)
                     else:
                         # AGENTS (Con manejo de errores)
                         try:

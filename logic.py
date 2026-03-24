@@ -7,6 +7,7 @@ from ebooklib import epub
 from groq import Groq
 from openai import OpenAI
 from docling.document_converter import DocumentConverter
+from openai import OpenAI
 
 # Configuración de sistema
 CONFIG_DIR = os.path.expanduser("~/.config/groq_epub_editor")
@@ -14,16 +15,17 @@ CONFIG_FILE = os.path.join(CONFIG_DIR, "config.json")
 
 class BookProcessor:
     def __init__(self, groq_key, cerebras_key):
-        # Cliente Groq para Edición
         self.groq_client = Groq(api_key=groq_key)
-
-        # Cliente Cerebras para Auditoría (Compatible con OpenAI SDK)
         self.cerebras_client = OpenAI(
             base_url="https://api.cerebras.ai/v1",
             api_key=cerebras_key
         )
+        # --- NUEVO: Cliente Ollama (Local) ---
+        self.ollama_client = OpenAI(
+            base_url="http://localhost:11434/v1",
+            api_key="ollama" # Ollama no necesita key real, pero el SDK pide una
+        )
         self.converter = DocumentConverter()
-
     @staticmethod
     def cargar_config():
         if os.path.exists(CONFIG_FILE):
@@ -105,6 +107,28 @@ class BookProcessor:
         except Exception as e:
             print(f"DEBUG Cerebras: {e}")
             return md_editado # Fallback al texto de Groq si falla
+
+    def llamar_ollama(self, texto_nuevo, contexto_anterior):
+        """Procesamiento local con Ollama usando Llama 3.2 1b."""
+        buffer = contexto_anterior[-1500:] if contexto_anterior else "Inicio del libro."
+
+        # Nota: Usamos un prompt algo más directo ya que el modelo 1B es pequeño
+        prompt = (
+            f"Eres un editor profesional. Limpia el siguiente texto de Markdown de basura "
+            f"(números de página, encabezados, errores OCR). No resumas, mantén todo el texto original.\n\n"
+            f"CONTEXTO PREVIO: {buffer}\n\n"
+            f"TEXTO A LIMPIAR:\n{texto_nuevo}"
+        )
+
+        try:
+            chat = self.ollama_client.chat.completions.create(
+                model="llama3.2:1b", # Asegúrate de haber hecho 'ollama run llama3.2:1b'
+                messages=[{"role": "user", "content": prompt}],
+                temperature=0.1
+            )
+            return chat.choices[0].message.content
+        except Exception as e:
+            return f"Error en Ollama: {str(e)}"
 
     def generar_epub(self, output_path, lista_limpios):
         book = epub.EpubBook()
