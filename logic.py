@@ -53,14 +53,15 @@ class BookProcessor:
         """AGENTE 1 (Groq): Limpieza y formato inicial."""
         buffer = contexto_anterior[-2000:] if contexto_anterior else "Inicio del libro."
         prompt = (
-            "Eres un EDITOR EDITORIAL profesional. Tu misión es limpiar el texto de un libro.\n\n"
-            "CONTEXTO ANTERIOR:\n"
-            f"--- {buffer} ---\n\n"
-            "INSTRUCCIONES:\n"
-            "1. Elimina basura técnica (OCR, números de página, encabezados).\n"
-            "2. NO RESUMAS. Mantén cada palabra del autor.\n"
-            "3. Estructura con Markdown limpio (# Capítulos).\n\n"
-            f"TEXTO A PROCESAR:\n{texto_nuevo}"
+                "Eres un EDITOR EDITORIAL profesional experto en limpieza de manuscritos.\n\n"
+                "CONTEXTO ANTERIOR (para mantener la coherencia):\n"
+                f"--- {buffer} ---\n\n"
+                "INSTRUCCIONES CRÍTICAS:\n"
+                "1. El texto de entrada ya está en Markdown. Tu única misión es eliminar la 'basura' técnica: números de página, encabezados/pies de página que se repiten y artefactos de OCR (caracteres extraños o saltos de línea mal puestos).\n"
+                "2. Respeta la estructura de capítulos: Los títulos ya vienen marcados con '##'. No los cambies ni añadidas niveles extra.\n"
+                "3. PROHIBIDO RESUMIR O PARAFRASEAR. Debes mantener íntegra cada palabra del autor. No omitas frases ni secciones por parecer 'redundantes'.\n"
+                "4. Devuelve exclusivamente el contenido limpio en Markdown, sin notas al lector ni introducciones.\n\n"
+                f"TEXTO A PROCESAR:\n{texto_nuevo}"
         )
         try:
             chat = self.groq_client.chat.completions.create(
